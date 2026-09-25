@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#143d33" />
+    <meta name="description" content="Crie orçamentos e recibos de hospedagem do BSH Flats Campina Grande." />
+    <title>Orçamentos & recibos · BSH Flats</title>
+    <link rel="icon" href="assets/logo-oficial.jpg" type="image/jpeg" />
+    <link rel="stylesheet" href="styles.css" />
+    <script type="module" src="app.js"></script>
+  </head>
+  <body>
+    <svg class="icon-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></symbol>
+      <symbol id="i-receipt" viewBox="0 0 24 24"><path d="M5 3l3 2 4-2 4 2 3-2v18l-3-2-4 2-4-2-3 2zM9 9h6M9 13h6M9 17h3"/></symbol>
+      <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+      <symbol id="i-settings" viewBox="0 0 24 24"><path d="M12 3v4m0 10v4M3 12h4m10 0h4M5.6 5.6l2.8 2.8m7.2 7.2 2.8 2.8M5.6 18.4l2.8-2.8m7.2-7.2 2.8-2.8"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></symbol>
+      <symbol id="i-bed" viewBox="0 0 24 24"><path d="M3 18v3m18-3v3M3 11V5m18 13H3v-7h15a3 3 0 0 1 3 3z"/><path d="M6 8h3v3H6zM12 11V7h6a3 3 0 0 1 3 3v4"/></symbol>
+      <symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 21v-3a6 6 0 0 1 12 0v3m1-16a3 3 0 0 1 0 6m3 10v-3a6 6 0 0 0-2-4"/></symbol>
+      <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18M8 15h2m4 0h2m-8 3h2"/></symbol>
+      <symbol id="i-coffee" viewBox="0 0 24 24"><path d="M4 8h13v7a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5zm13 1h2a3 3 0 0 1 0 6h-2M2 23h19M8 2v2m5-2v2"/></symbol>
+      <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/></symbol>
+      <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6 6a8 8 0 0 1 13 2M5 16a8 8 0 0 0 13 2"/></symbol>
+      <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+      <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+      <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4m-5 5 5-5 5 5M4 16v5h16v-5"/></symbol>
+      <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v.1"/></symbol>
+      <symbol id="i-spark" viewBox="0 0 24 24"><path d="m12 3 2.6 6.4L21 12l-6.4 2.6L12 21l-2.6-6.4L3 12l6.4-2.6z"/></symbol>
+    </svg>
+
+    <header class="app-header">
+      <a class="brand" href="./" aria-label="BSH Flats — início"><img class="hotel-logo" src="assets/logo-oficial.jpg" alt="BSH Flats Campina" width="82" height="82" /></a>
+      <div class="header-label"><span class="status-dot"></span> PORTAL DE HOSPEDAGEM</div>
+      <button class="button button-quiet settings-trigger" type="button"><svg class="icon"><use href="#i-settings"/></svg><span>Dados do hotel</span></button>
+    </header>
+
+    <main class="workspace">
+      <div class="page-heading">
+        <div><div class="eyebrow">HOSPITALIDADE EM CADA DETALHE</div><h1>Orçamentos <span>&</span> recibos</h1><p>Mais praticidade para você. Mais cuidado com quem chega.</p></div>
+        <div class="location-label"><svg class="icon"><use href="#i-pin"/></svg><span>Campina Grande, PB</span></div>
+      </div>
+
+      <div class="document-types" role="group" aria-label="Tipo de documento">
+        <button type="button" class="type-option active" data-type="quote" aria-pressed="true"><span class="type-icon"><svg class="icon"><use href="#i-file"/></svg></span><span class="type-text"><strong>Orçamento</strong><span>Planeje a próxima estadia</span></span><span class="type-radio"><svg class="icon"><use href="#i-check"/></svg></span></button>
+        <button type="button" class="type-option" data-type="receipt" aria-pressed="false"><span class="type-icon"><svg class="icon"><use href="#i-receipt"/></svg></span><span class="type-text"><strong>Recibo</strong><span>Registre um pagamento recebido</span></span><span class="type-radio"><svg class="icon"><use href="#i-check"/></svg></span></button>
+      </div>
+
+      <div class="editor-layout">
+        <form id="document-form" class="editor-form">
+          <section class="form-card">
+            <div class="section-heading"><span class="step-number">01</span><h2>Dados da hospedagem</h2><svg class="icon section-icon"><use href="#i-users"/></svg></div>
+            <div class="field"><label for="guestName">Nome do hóspede ou responsável <span class="required-dot" aria-hidden="true">•</span></label><input id="guestName" name="guestName" type="text" placeholder="Como podemos chamar o hóspede?" autocomplete="name" maxlength="100" required /></div>
+            <div class="field-row">
+              <div class="field"><label for="guestDocument">CPF / CNPJ <span class="optional">opcional</span></label><input id="guestDocument" name="guestDocument" type="text" placeholder="Documento do responsável" maxlength="24" /></div>
+              <div class="field"><label for="guests">Número de hóspedes</label><div class="input-with-icon"><svg class="icon"><use href="#i-users"/></svg><input id="guests" name="guests" type="number" min="1" max="999" step="1" required /></div></div>
+            </div>
+            <div class="field-row stay-dates">
+              <div class="field"><label for="checkIn">Check-in</label><input id="checkIn" name="checkIn" type="date" required /><span class="field-hint">A partir das 14h</span></div>
+              <div class="field"><label for="checkOut">Check-out</label><input id="checkOut" name="checkOut" type="date" required /><span class="field-hint">Até as 12h</span></div>
+            </div>
+            <div class="stay-duration"><div><label for="nights">Quantidade de diárias</label><span class="field-hint" id="nights-hint">Ao alterar, a data de saída é ajustada.</span></div><input id="nights" name="nights" type="number" min="1" step="1" aria-describedby="nights-hint" required /></div>
+            <div class="stay-note"><svg class="icon"><use href="#i-calendar"/></svg><span id="stay-description">1 diária de hospedagem</span><span class="breakfast-note"><svg class="icon"><use href="#i-coffee"/></svg>Café da manhã incluso</span></div>
+          </section>
+
+          <section class="form-card rooms-card">
+            <div class="section-heading"><span class="step-number">02</span><h2>Quantidade de quartos</h2><span class="small-note">Preço / diária</span></div>
+            <div class="room-row"><span class="room-icon"><svg class="icon"><use href="#i-bed"/></svg></span><div class="room-description"><label for="single">Single</label><span>Até 1 pessoa</span></div><span class="room-price">R$ 99,90</span><div class="quantity-control"><button type="button" data-room="single" data-delta="-1" aria-label="Remover um quarto single">−</button><input id="single" name="single" type="number" min="0" max="99" step="1" aria-label="Quantidade de quartos single" required /><button type="button" data-room="single" data-delta="1" aria-label="Adicionar um quarto single">+</button></div></div>
+            <div class="room-row"><span class="room-icon"><svg class="icon"><use href="#i-bed"/></svg></span><div class="room-description"><label for="double">Duplo</label><span>Até 2 pessoas</span></div><span class="room-price">R$ 120,00</span><div class="quantity-control"><button type="button" data-room="double" data-delta="-1" aria-label="Remover um quarto duplo">−</button><input id="double" name="double" type="number" min="0" max="99" step="1" aria-label="Quantidade de quartos duplos" required /><button type="button" data-room="double" data-delta="1" aria-label="Adicionar um quarto duplo">+</button></div></div>
+            <div class="room-row"><span class="room-icon"><svg class="icon"><use href="#i-bed"/></svg></span><div class="room-description"><label for="triple">Triplo</label><span>Até 3 pessoas</span></div><span class="room-price">R$ 150,00</span><div class="quantity-control"><button type="button" data-room="triple" data-delta="-1" aria-label="Remover um quarto triplo">−</button><input id="triple" name="triple" type="number" min="0" max="99" step="1" aria-label="Quantidade de quartos triplos" required /><button type="button" data-room="triple" data-delta="1" aria-label="Adicionar um quarto triplo">+</button></div></div>
+            <div class="rooms-footer"><span id="room-summary">1 quarto selecionado</span><span id="capacity-summary">Capacidade: 1 pessoa</span></div>
+            <div class="discount-box">
+              <label class="discount-toggle" for="applyDiscount"><input id="applyDiscount" name="applyDiscount" type="checkbox" checked aria-describedby="discount-status" /><span>Aplicar desconto</span><svg class="icon"><use href="#i-spark"/></svg></label>
+              <p id="discount-status" class="discount-status" aria-live="polite">O percentual progressivo depende da quantidade de diárias.</p>
+              <div class="discount-tiers" aria-label="Tabela de descontos progressivos"><div data-tier="5"><span>2 diárias</span><strong>5% <small>OFF</small></strong></div><div data-tier="10"><span>3 diárias</span><strong>10% <small>OFF</small></strong></div><div data-tier="15"><span>4 diárias</span><strong>15% <small>OFF</small></strong></div><div data-tier="20"><span>5+ diárias</span><strong>20% <small>OFF</small></strong></div></div>
+              <div class="field manual-discount-field"><label for="manualDiscount">Desconto especial (%) <span class="optional">opcional</span></label><input id="manualDiscount" name="manualDiscount" type="text" inputmode="decimal" maxlength="6" placeholder="Automático" aria-describedby="manual-discount-hint manual-discount-error" /><span class="field-hint" id="manual-discount-hint">Deixe vazio para usar o progressivo. O percentual especial substitui o automático.</span><span class="discount-error" id="manual-discount-error" role="alert" hidden></span></div>
+              <div class="discount-summary"><span>Subtotal sem desconto</span><strong id="discount-subtotal">R$ 99,90</strong><span id="discount-applied-label">Desconto aplicado</span><strong id="discount-amount">R$ 0,00</strong><span>Total da hospedagem</span><strong id="discount-total">R$ 99,90</strong></div>
+            </div>
+          </section>
+
+          <section class="form-card details-card">
+            <div class="section-heading"><span class="step-number">03</span><h2 id="details-title">Detalhes do documento</h2><svg class="icon section-icon"><use href="#i-file"/></svg></div>
+            <div class="field-row"><div class="field"><label for="issueDate">Data de emissão</label><input id="issueDate" name="issueDate" type="date" required /></div><div class="field"><label for="documentNumber">Nº do documento <span class="optional">opcional</span></label><input id="documentNumber" name="documentNumber" type="text" maxlength="30" placeholder="Ex.: 2026-001" /></div></div>
+            <div id="payment-fields" class="field-row" hidden><div class="field"><label for="paymentDate">Data do pagamento</label><input id="paymentDate" name="paymentDate" type="date" /></div><div class="field"><label for="paymentMethod">Forma de pagamento</label><select id="paymentMethod" name="paymentMethod"><option>Pix</option><option>Dinheiro</option><option>Cartão de crédito</option><option>Cartão de débito</option><option>Transferência bancária</option></select></div></div>
+            <div class="field"><label for="notes">Observações <span class="optional">opcional</span></label><textarea id="notes" name="notes" rows="2" maxlength="500" placeholder="Algum detalhe especial sobre esta hospedagem?"></textarea><span class="field-hint" id="receipt-note" hidden>O recibo confirma o recebimento do valor total da hospedagem.</span></div>
+          </section>
+          <p id="validation-message" class="validation-message" role="alert" hidden></p>
+        </form>
+
+        <aside class="preview-panel" aria-label="Prévia do documento">
+          <div class="preview-heading"><span><span class="preview-dot"></span> PRÉVIA DO DOCUMENTO</span><span class="live-label">Atualiza em tempo real</span></div>
+          <div class="paper-wrap"><article class="document-paper" id="document-preview" aria-label="Documento de hospedagem"></article></div>
+          <div class="export-panel"><div class="export-total"><div><span id="total-label">Total do orçamento</span><span id="savings-label">Café da manhã incluso</span></div><strong id="grand-total" aria-live="polite">R$ 99,90</strong></div><button type="submit" form="document-form" class="button button-primary export-button"><svg class="icon"><use href="#i-download"/></svg><span>Imprimir / salvar PDF</span><svg class="icon export-arrow"><use href="#i-arrow"/></svg></button><p>Documento pronto para compartilhar, no formato A4.</p></div>
+        </aside>
+      </div>
+      <div class="workspace-bottom"><span><svg class="icon"><use href="#i-check"/></svg><span id="save-status">Rascunho salvo neste navegador</span></span><button type="button" class="button button-quiet" id="reset-button"><svg class="icon"><use href="#i-refresh"/></svg>Novo documento</button></div>
+    </main>
+    <footer class="app-footer"><span>BSH FLATS <span class="footer-divider">/</span> CAMPINA GRANDE</span><span>Feito para receber bem.</span></footer>
+
+    <dialog id="settings-dialog" class="settings-dialog">
+      <form id="hotel-form">
+        <div class="dialog-heading"><div><div class="eyebrow">IDENTIDADE & CONTATO</div><h2>Dados do hotel</h2></div><button class="icon-button" type="button" id="close-settings" aria-label="Fechar configurações"><svg class="icon"><use href="#i-close"/></svg></button></div>
+        <p class="dialog-intro">Estas informações aparecem em todos os documentos.</p>
+        <div class="logo-settings"><img id="settings-logo" src="assets/logo-oficial.jpg" alt="Logo do hotel" /><div><button class="button button-secondary upload-label" id="upload-logo-button" type="button"><svg class="icon"><use href="#i-upload"/></svg>Enviar logo</button><input id="logo-upload" type="file" accept="image/png,image/jpeg,image/webp" hidden /><p>PNG, JPG ou WebP · até 2 MB</p><button id="restore-logo" type="button" class="text-button">Restaurar logo oficial</button></div></div>
+        <div class="field"><label for="hotelName">Nome do hotel</label><input id="hotelName" name="hotelName" maxlength="80" required /></div>
+        <div class="field-row"><div class="field"><label for="hotelPhone">Telefone</label><input id="hotelPhone" name="hotelPhone" type="tel" maxlength="30" required /></div><div class="field"><label for="hotelCnpj">CNPJ</label><input id="hotelCnpj" name="hotelCnpj" maxlength="24" required /></div></div>
+        <div class="field"><label for="hotelAddress">Endereço</label><input id="hotelAddress" name="hotelAddress" maxlength="160" required /></div>
+        <div class="field-row"><div class="field"><label for="hotelCity">Cidade / UF</label><input id="hotelCity" name="hotelCity" maxlength="60" required /></div><div class="field"><label for="hotelZip">CEP</label><input id="hotelZip" name="hotelZip" maxlength="12" /></div></div>
+        <div class="field"><label for="hotelPix">Chave Pix</label><input id="hotelPix" name="hotelPix" maxlength="120" required /></div>
+        <div class="field"><label for="hotelPayee">Favorecido</label><input id="hotelPayee" name="hotelPayee" maxlength="80" required /></div>
+        <div class="field"><label for="hotelBank">Banco</label><input id="hotelBank" name="hotelBank" maxlength="80" /></div>
+        <div class="field-row"><div class="field"><label for="hotelAgency">Agência</label><input id="hotelAgency" name="hotelAgency" maxlength="20" /></div><div class="field"><label for="hotelAccount">Conta corrente</label><input id="hotelAccount" name="hotelAccount" maxlength="30" /></div></div>
+        <p id="settings-error" class="validation-message" role="alert" hidden></p>
+        <div class="dialog-actions"><button class="button button-secondary" type="button" id="cancel-settings">Cancelar</button><button class="button button-primary" type="submit">Salvar alterações<svg class="icon"><use href="#i-check"/></svg></button></div>
+      </form>
+    </dialog>
+
+    <dialog id="reset-dialog" class="reset-dialog"><div class="dialog-heading"><h2>Começar um novo documento?</h2></div><p>Os campos da hospedagem serão limpos. Os dados do hotel serão mantidos.</p><div class="dialog-actions"><button class="button button-secondary" type="button" id="cancel-reset">Continuar editando</button><button class="button button-primary" type="button" id="confirm-reset">Novo documento</button></div></dialog>
+    <div id="toast" class="toast" role="status" hidden></div>
+    <noscript><div class="noscript">Ative o JavaScript do navegador para gerar orçamentos e recibos.</div></noscript>
+  </body>
+</html>
