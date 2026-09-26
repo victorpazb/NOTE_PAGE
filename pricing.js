@@ -71,22 +71,17 @@ export function nightsBetween(checkIn, checkOut) {
   const end = dateTimestamp(checkOut);
   return Number.isFinite(start) && Number.isFinite(end) && end > start ? (end - start) / DAY_MS : 0;
 }
-export function discountFor(nights) {
-  return nights >= 5 ? 20 : ({ 2: 5, 3: 10, 4: 15 }[nights] || 0);
-}
-export function resolveDiscount({ nights, applyDiscount = true, manualDiscount = '' }) {
-  const automaticDiscountPercent = discountFor(nights);
-  const result = { automaticDiscountPercent, discountPercent: 0, discountKind: 'none', discountError: '' };
-  if (!applyDiscount) return result;
+export function resolveDiscount(manualDiscount = '') {
+  const result = { discountPercent: 0, discountError: '' };
   const entered = String(manualDiscount ?? '').trim();
-  if (!entered) return { ...result, discountPercent: automaticDiscountPercent, discountKind: 'progressive' };
+  if (!entered) return result;
   const percent = Number(entered.replace(',', '.'));
-  if (!/^\d{1,3}([.,]\d{1,2})?$/.test(entered) || !Number.isFinite(percent) || percent > 100 || percent <= automaticDiscountPercent) {
-    return { ...result, discountError: 'Informe um desconto especial maior que ' + automaticDiscountPercent + '% e de até 100%, com no máximo 2 casas decimais.' };
+  if (!/^\d{1,3}([.,]\d{1,2})?$/.test(entered) || !Number.isFinite(percent) || percent > 100) {
+    return { ...result, discountError: 'Informe um desconto de 0% a 100%, com no máximo 2 casas decimais.' };
   }
-  return { ...result, discountPercent: percent, discountKind: 'special' };
+  return { ...result, discountPercent: percent };
 }
-export function calculateStay({ checkIn, checkOut, rooms = {}, guests, applyDiscount = true, manualDiscount = '' }) {
+export function calculateStay({ checkIn, checkOut, rooms = {}, guests, manualDiscount = '' }) {
   const nights = nightsBetween(checkIn, checkOut);
   const errors = [];
   if (!nights) errors.push('Informe uma saída posterior à entrada, com pelo menos 1 diária.');
@@ -104,7 +99,7 @@ export function calculateStay({ checkIn, checkOut, rooms = {}, guests, applyDisc
   if (!Number.isInteger(guestCount) || !(guestCount >= 1)) errors.push('Informe pelo menos 1 hóspede.');
   else if (guestCount > capacity && roomCount) errors.push('Os quartos selecionados acomodam até ' + capacity + (capacity === 1 ? ' pessoa.' : ' pessoas.') + ' Ajuste os hóspedes ou adicione quartos.');
   const subtotal = lines.reduce((sum, room) => sum + room.subtotal, 0);
-  const discountDetails = resolveDiscount({ nights, applyDiscount, manualDiscount });
+  const discountDetails = resolveDiscount(manualDiscount);
   if (discountDetails.discountError) errors.push(discountDetails.discountError);
   const basisPoints = Math.round(discountDetails.discountPercent * 100);
   const discount = Math.round(subtotal * basisPoints / 10000);

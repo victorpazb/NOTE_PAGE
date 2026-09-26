@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { addDays, dateTimestamp, discountFor, formatDate, nightsBetween, calculateStay, currencyWords } from '../pricing.js';
+import { addDays, dateTimestamp, formatDate, nightsBetween, calculateStay, currencyWords } from '../pricing.js';
 
 const stay = (days, rooms = { single: 1 }, guests = 1, discountOptions = {}) => calculateStay({
   checkIn: '2026-09-25', checkOut: addDays('2026-09-25', days), rooms, guests, ...discountOptions,
@@ -11,18 +11,16 @@ test('tarifas de uma diária em centavos, sem desconto', () => {
   assert.equal(stay(1, { double: 1 }, 2).total, 12000);
   assert.equal(stay(1, { triple: 1 }, 3).total, 15000);
 });
-test('todas as faixas de desconto e arredondamento de centavos', () => {
-  const cases = [[1, 0, 9990], [2, 5, 18981], [3, 10, 26973], [4, 15, 33966], [5, 20, 39960], [6, 20, 47952]];
-  for (const [days, percent, total] of cases) {
+test('nenhum desconto é aplicado automaticamente, independentemente das diárias', () => {
+  for (const days of [1, 2, 3, 4, 5, 10]) {
     const result = stay(days);
-    assert.equal(result.discountPercent, percent);
-    assert.equal(result.total, total);
-    assert.equal(result.subtotal, result.total + result.discount);
+    assert.equal(result.discountPercent, 0);
+    assert.equal(result.discount, 0);
+    assert.equal(result.total, result.subtotal);
   }
-  assert.equal(discountFor(30), 20);
 });
 test('desconto aplicado sobre quartos × diárias, com ocupação independente', () => {
-  const result = stay(5, { single: 1, double: 3, triple: 8 }, 12);
+  const result = stay(5, { single: 1, double: 3, triple: 8 }, 12, { manualDiscount: '20' });
   assert.equal(result.roomCount, 12);
   assert.equal(result.capacity, 31);
   assert.equal(result.subtotal, 829950);
@@ -73,38 +71,34 @@ test('valor por extenso em reais e centavos', () => {
   assert.equal(currencyWords(100000000), 'um milhão de reais');
 });
 
-test('duas diárias aplicam 5%; dois quartos por uma diária não mudam a faixa', () => {
+test('diárias e quantidade de quartos não ativam desconto', () => {
   const twoNights = stay(2);
   assert.equal(twoNights.nights, 2);
-  assert.equal(twoNights.discountKind, 'progressive');
-  assert.equal(twoNights.discount, 999);
-  assert.equal(twoNights.total, 18981);
+  assert.equal(twoNights.discount, 0);
+  assert.equal(twoNights.total, 19980);
   const twoRooms = stay(1, { single: 2 });
   assert.equal(twoRooms.roomCount, 2);
   assert.equal(twoRooms.discount, 0);
   assert.equal(twoRooms.total, 19980);
 });
-test('checkbox desligado remove todo desconto, inclusive especial salvo', () => {
-  for (const days of [2, 3, 4, 5, 10]) {
-    const result = stay(days, { single: 1 }, 1, { applyDiscount: false, manualDiscount: '35' });
+test('campo vazio ou zero considera desconto de 0%', () => {
+  for (const manualDiscount of ['', ' ', '0', '0,00', '0.0']) {
+    const result = stay(5, { single: 1 }, 1, { manualDiscount });
     assert.equal(result.discountPercent, 0);
     assert.equal(result.discount, 0);
     assert.equal(result.total, result.subtotal);
-    assert.equal(result.discountKind, 'none');
     assert.deepEqual(result.errors, []);
   }
 });
-test('desconto especial substitui o progressivo, sem somar os percentuais', () => {
+test('desconto informado aplica-se sobre o subtotal', () => {
   const result = stay(2, { single: 1 }, 1, { manualDiscount: '15' });
-  assert.equal(result.automaticDiscountPercent, 5);
   assert.equal(result.discountPercent, 15);
-  assert.equal(result.discountKind, 'special');
   assert.equal(result.discount, 2997);
   assert.equal(result.total, 16983);
   assert.equal(result.average, 8492);
   assert.deepEqual(result.errors, []);
 });
-test('desconto especial aceita vírgula, ponto, uma diária e cortesia de 100%', () => {
+test('desconto aceita vírgula, ponto, uma diária e cortesia de 100%', () => {
   for (const manualDiscount of ['12,5', '12.5', '12,50']) {
     const result = stay(2, { single: 1 }, 1, { manualDiscount });
     assert.equal(result.discountPercent, 12.5);
@@ -114,21 +108,20 @@ test('desconto especial aceita vírgula, ponto, uma diária e cortesia de 100%',
   assert.equal(stay(1, { double: 1 }, 2, { manualDiscount: '10' }).total, 10800);
   assert.equal(stay(5, { triple: 1 }, 3, { manualDiscount: '100' }).total, 0);
 });
-test('desconto especial inválido impede emissão e não produz total negativo', () => {
-  for (const manualDiscount of ['-1', '0', '5', '4,99', '100,01', '101', 'texto', '10,125', 'Infinity', '1e2', '2,5.5']) {
+test('desconto inválido impede emissão e não produz total negativo', () => {
+  for (const manualDiscount of ['-1', '100,01', '101', 'texto', '10,125', 'Infinity', '1e2', '2,5.5']) {
     const result = stay(2, { single: 1 }, 1, { manualDiscount });
     assert.ok(result.discountError, manualDiscount);
     assert.ok(result.errors.includes(result.discountError));
     assert.equal(result.discount, 0);
     assert.equal(result.total, result.subtotal);
   }
-  assert.equal(stay(2, { single: 1 }, 1, { manualDiscount: 'inválido', applyDiscount: false }).discountError, '');
 });
-test('limpar o especial restaura o automático e mudar as datas revalida o especial', () => {
-  assert.equal(stay(2, { single: 1 }, 1, { manualDiscount: '' }).discountPercent, 5);
-  assert.equal(stay(2, { single: 1 }, 1, { manualDiscount: ' ' }).discountPercent, 5);
+test('limpar o desconto volta a zero e o mesmo percentual vale para outras durações', () => {
+  assert.equal(stay(2, { single: 1 }, 1, { manualDiscount: '' }).discountPercent, 0);
+  assert.equal(stay(2, { single: 1 }, 1, { manualDiscount: ' ' }).discountPercent, 0);
   assert.equal(stay(2, { single: 1 }, 1, { manualDiscount: '15' }).discountError, '');
-  assert.ok(stay(5, { single: 1 }, 1, { manualDiscount: '15' }).discountError);
+  assert.equal(stay(5, { single: 1 }, 1, { manualDiscount: '15' }).discountPercent, 15);
 });
 test('quantidade de diárias ajusta saída e rejeita datas fora do calendário', () => {
   assert.equal(addDays('2026-09-25', 2), '2026-09-27');

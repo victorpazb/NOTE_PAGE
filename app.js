@@ -1,4 +1,5 @@
 import { currency, currencyWords, dateTimestamp, localToday, addDays, formatDate, calculateStay } from './pricing.js';
+import { createPixPayload, pixQrSvg } from './pix.js';
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -26,10 +27,11 @@ let toastTimer;
 let pendingLogo;
 let attemptedSubmit = false;
 let storageAvailable = true;
+let cachedPix = { payload: '', svg: '' };
 
 function defaults() {
   const today = localToday();
-  return { type: 'quote', guestName: '', guestDocument: '', guests: '1', checkIn: today, checkOut: addDays(today, 1), single: '1', double: '0', triple: '0', issueDate: today, documentNumber: '', paymentDate: today, paymentMethod: 'Pix', notes: '', applyDiscount: true, manualDiscount: '' };
+  return { type: 'quote', guestName: '', guestDocument: '', guests: '1', checkIn: today, checkOut: addDays(today, 1), single: '1', double: '0', triple: '0', issueDate: today, documentNumber: '', paymentDate: today, paymentMethod: 'Pix', notes: '', manualDiscount: '0' };
 }
 function readStorage(key) {
   try { return JSON.parse(localStorage.getItem(key) || 'null'); }
@@ -74,7 +76,6 @@ const percent = (value) => new Intl.NumberFormat('pt-BR', { maximumFractionDigit
 
 function applyState() {
   FIELD_NAMES.forEach((name) => { form.elements[name].value = state[name]; });
-  $('#applyDiscount').checked = state.applyDiscount;
   $$('.type-option').forEach((button) => {
     const active = button.dataset.type === state.type;
     button.classList.toggle('active', active);
@@ -90,10 +91,9 @@ function applyState() {
 }
 function readForm() {
   FIELD_NAMES.forEach((name) => { state[name] = form.elements[name].value; });
-  state.applyDiscount = $('#applyDiscount').checked;
 }
 function currentCalculation() {
-  return calculateStay({ checkIn: state.checkIn, checkOut: state.checkOut, guests: state.guests, rooms: { single: state.single, double: state.double, triple: state.triple }, applyDiscount: state.applyDiscount, manualDiscount: state.manualDiscount });
+  return calculateStay({ checkIn: state.checkIn, checkOut: state.checkOut, guests: state.guests, rooms: { single: state.single, double: state.double, triple: state.triple }, manualDiscount: state.manualDiscount });
 }
 function saveDraft() {
   storageAvailable = writeStorage(DRAFT_KEY, state);
@@ -106,11 +106,23 @@ function notify(message) {
   toastTimer = setTimeout(() => { $('#toast').hidden = true; }, 3500);
 }
 
+function renderPix(calc) {
+  if (state.type === 'receipt' || calc.errors.length || calc.total <= 0) return '';
+  try {
+    const payload = createPixPayload({ key: hotel.hotelPix, payee: hotel.hotelPayee, city: hotel.hotelCity, amount: calc.total });
+    if (payload !== cachedPix.payload) cachedPix = { payload, svg: pixQrSvg(payload) };
+    return '<figure class="doc-pix-code">' + cachedPix.svg + '<figcaption>Escaneie para pagar<br><strong>' + e(currency(calc.total)) + '</strong></figcaption></figure>';
+  } catch {
+    return '<p class="doc-pix-error">QR Code indisponível. Confira a chave Pix, o favorecido e a cidade em Dados do hotel.</p>';
+  }
+}
+
 function renderPreview(calc) {
   const receipt = state.type === 'receipt';
   const guest = state.guestName.trim();
   const guestCount = Number(state.guests) || 0;
   const label = receipt ? 'Recibo' : 'Orçamento';
+  const pix = renderPix(calc);
   const rows = calc.lines.map((room) => '<tr><td>' + e(room.name) + '</td><td>' + room.quantity + '</td><td>' + calc.nights + '</td><td>' + e(currency(room.rate)) + '</td><td>' + e(currency(room.subtotal)) + '</td></tr>').join('');
   const stayDates = e(formatDate(state.checkIn)) + ' a ' + e(formatDate(state.checkOut));
   const paper = $('#document-preview');
@@ -123,12 +135,12 @@ function renderPreview(calc) {
     '<div class="doc-stay"><div><div class="doc-label">Período da hospedagem</div><strong>' + stayDates + '</strong><div class="doc-sub">' + plural(calc.nights, 'diária', 'diárias') + ' · Check-in 14h / Check-out 12h</div></div><div><div class="doc-label">Hóspedes & acomodações</div><strong>' + plural(guestCount, 'pessoa', 'pessoas') + '</strong><div class="doc-sub">' + plural(calc.roomCount, 'quarto selecionado', 'quartos selecionados') + '</div></div></div>',
     '<div class="doc-section-title">Detalhamento da hospedagem</div>',
     '<table class="doc-table"><thead><tr><th scope="col">ACOMODAÇÃO</th><th scope="col">QTD.</th><th scope="col">DIÁRIAS</th><th scope="col">UNITÁRIO</th><th scope="col">SUBTOTAL</th></tr></thead><tbody>' + (rows || '<tr><td colspan="5" class="doc-empty">Selecione uma acomodação para começar.</td></tr>') + '</tbody></table>',
-    '<div class="doc-calculation"><div><span>Subtotal da hospedagem</span><span>' + e(currency(calc.subtotal)) + '</span></div>' + (calc.discount ? '<div class="discount-line"><span>' + (calc.discountKind === 'special' ? 'Desconto especial de ' : 'Desconto progressivo de ') + e(percent(calc.discountPercent)) + '</span><span>− ' + e(currency(calc.discount)) + '</span></div>' : '') + '</div>',
+    '<div class="doc-calculation"><div><span>Subtotal da hospedagem</span><span>' + e(currency(calc.subtotal)) + '</span></div>' + (calc.discount ? '<div class="discount-line"><span>Desconto de ' + e(percent(calc.discountPercent)) + '</span><span>− ' + e(currency(calc.discount)) + '</span></div>' : '') + '</div>',
     '<div class="doc-breakfast">' + icon('coffee') + 'Café da manhã incluso em todas as diárias</div>',
     '<div class="doc-total"><div class="doc-total-top"><span>' + (receipt ? 'Valor total recebido' : 'Valor final do orçamento') + '</span><strong>' + e(currency(calc.total)) + '</strong></div><div class="doc-words">' + e(currencyWords(calc.total)) + '</div><div class="doc-average">Valor médio por diária / pessoa: ' + e(currency(calc.average)) + '</div></div>',
-    '<div class="doc-bottom-grid"><div><div class="doc-bottom-title">' + (receipt ? 'Detalhes do pagamento' : 'Informações importantes') + '</div>',
+    '<div class="doc-bottom-grid' + (pix ? ' doc-bottom-with-qr' : '') + '"><div><div class="doc-bottom-title">' + (receipt ? 'Detalhes do pagamento' : 'Informações importantes') + '</div>',
     receipt ? '<ul class="doc-conditions"><li>Recebido em ' + e(formatDate(state.paymentDate)) + '.</li><li>Forma de pagamento: ' + e(state.paymentMethod) + '.</li><li>Pagamento integral da hospedagem.</li></ul><span class="doc-paid">PAGAMENTO RECEBIDO</span>' : '<ul class="doc-conditions"><li>Check-in a partir das 14h de ' + e(formatDate(state.checkIn)) + '.</li><li>Check-out até as 12h de ' + e(formatDate(state.checkOut)) + '.</li><li>Confirmação mediante disponibilidade.</li><li>Valores sujeitos a alteração sem aviso prévio.</li></ul>',
-    '</div><div><div class="doc-bottom-title">' + (receipt ? 'Dados do recebedor' : 'Dados para pagamento · Pix') + '</div><div class="doc-pix-key">' + e(receipt ? hotel.hotelCnpj : hotel.hotelPix) + '</div><div class="doc-payee">' + e(hotel.hotelPayee) + '<br>CNPJ: ' + e(hotel.hotelCnpj) + '</div><div class="doc-bank">' + (receipt ? e(hotel.hotelPhone) : e(hotel.hotelBank) + '<br>' + (hotel.hotelAgency ? 'Agência: ' + e(hotel.hotelAgency) : '') + (hotel.hotelAccount ? ' · Conta: ' + e(hotel.hotelAccount) : '')) + '</div></div></div>',
+    '</div><div><div class="doc-bottom-title">' + (receipt ? 'Dados do recebedor' : 'Dados para pagamento · Pix') + '</div><div class="doc-payment"><div class="doc-payment-details"><div class="doc-pix-key">' + e(receipt ? hotel.hotelCnpj : hotel.hotelPix) + '</div><div class="doc-payee">' + e(hotel.hotelPayee) + '<br>CNPJ: ' + e(hotel.hotelCnpj) + '</div><div class="doc-bank">' + (receipt ? e(hotel.hotelPhone) : e(hotel.hotelBank) + '<br>' + (hotel.hotelAgency ? 'Agência: ' + e(hotel.hotelAgency) : '') + (hotel.hotelAccount ? ' · Conta: ' + e(hotel.hotelAccount) : '')) + '</div></div>' + pix + '</div></div></div>',
     state.notes.trim() ? '<div class="doc-notes"><strong>OBSERVAÇÕES</strong><br>' + e(state.notes.trim()) + '</div>' : '',
     receipt ? '<div class="doc-signature">' + e(hotel.hotelName) + '<br>Assinatura do recebedor</div>' : '',
     '<footer class="doc-footer"><strong>' + e(hotel.hotelName) + '</strong><br>' + e(hotel.hotelAddress) + '<br>' + e(hotel.hotelCity) + (hotel.hotelZip ? ' · CEP ' + e(hotel.hotelZip) : '') + ' · ' + e(hotel.hotelPhone) + '</footer>',
@@ -164,32 +176,16 @@ function render({ syncNights = true } = {}) {
   $('#stay-description').textContent = calc.nights ? plural(calc.nights, 'diária de hospedagem', 'diárias de hospedagem') : 'Selecione um período válido';
   $('#room-summary').textContent = plural(calc.roomCount, 'quarto selecionado', 'quartos selecionados');
   $('#capacity-summary').textContent = 'Capacidade: ' + plural(calc.capacity, 'pessoa', 'pessoas');
-  $$('.discount-tiers > div').forEach((tier) => {
-    const active = calc.discountKind === 'progressive' && Number(tier.dataset.tier) === calc.discountPercent;
-    tier.classList.toggle('current', active);
-    if (active) tier.setAttribute('aria-current', 'true');
-    else tier.removeAttribute('aria-current');
-  });
   $$('[data-room]').forEach((button) => {
     const value = Number(state[button.dataset.room]);
     button.disabled = button.dataset.delta === '-1' ? value <= 0 : value >= 99;
   });
   $('#grand-total').textContent = currency(calc.total);
   $('#total-label').textContent = state.type === 'receipt' ? 'Total recebido' : 'Total do orçamento';
-  $('#savings-label').textContent = calc.discountError ? 'Corrija o desconto especial' : calc.discount ? 'Economia de ' + currency(calc.discount) + ' (' + percent(calc.discountPercent) + ')' : !state.applyDiscount ? 'Sem desconto · café da manhã incluso' : 'Café da manhã incluso';
+  $('#savings-label').textContent = calc.discountError ? 'Corrija o desconto' : calc.discount ? 'Economia de ' + currency(calc.discount) + ' (' + percent(calc.discountPercent) + ')' : 'Café da manhã incluso';
   $('#savings-label').classList.toggle('has-discount', calc.discount > 0);
-  $('#manualDiscount').disabled = !state.applyDiscount;
-  $('#manualDiscount').placeholder = 'Automático: ' + percent(calc.automaticDiscountPercent);
-  $('#manual-discount-hint').textContent = 'Deixe vazio para usar o progressivo. Para um caso especial, informe mais de ' + percent(calc.automaticDiscountPercent) + ' e até 100%. O percentual substitui o automático.';
-  let discountStatus = 'O progressivo começa em 2 diárias. Você pode informar um desconto especial.';
-  if (!state.applyDiscount) discountStatus = 'Desconto desativado. O total considera as tarifas integrais.';
-  else if (calc.discountError) discountStatus = 'Confira o percentual especial informado.';
-  else if (!calc.nights) discountStatus = 'Informe um período válido para calcular o desconto.';
-  else if (calc.discountKind === 'special') discountStatus = 'Desconto especial de ' + percent(calc.discountPercent) + ' aplicado ao total.';
-  else if (calc.discountPercent) discountStatus = plural(calc.nights, 'diária', 'diárias') + ' de hospedagem: ' + percent(calc.discountPercent) + ' de desconto progressivo aplicado.';
-  $('#discount-status').textContent = discountStatus;
   $('#discount-subtotal').textContent = currency(calc.subtotal);
-  $('#discount-applied-label').textContent = calc.discountKind === 'special' ? 'Desconto especial (' + percent(calc.discountPercent) + ')' : 'Desconto aplicado (' + percent(calc.discountPercent) + ')';
+  $('#discount-applied-label').textContent = 'Desconto (' + percent(calc.discountPercent) + ')';
   $('#discount-amount').textContent = (calc.discount ? '− ' : '') + currency(calc.discount);
   $('#discount-total').textContent = currency(calc.total);
   updateValidation(calc);
@@ -315,6 +311,13 @@ $('#hotel-form').addEventListener('submit', (event) => {
   Object.keys(DEFAULT_HOTEL).filter((key) => key !== 'logo').forEach((name) => { nextHotel[name] = event.currentTarget.elements[name].value.trim(); });
   if (!nextHotel.hotelName || !nextHotel.hotelPhone || !nextHotel.hotelCnpj || !nextHotel.hotelAddress || !nextHotel.hotelCity || !nextHotel.hotelPix || !nextHotel.hotelPayee) {
     $('#settings-error').textContent = 'Preencha os dados obrigatórios do hotel.';
+    $('#settings-error').hidden = false;
+    return;
+  }
+  try {
+    createPixPayload({ key: nextHotel.hotelPix, payee: nextHotel.hotelPayee, city: nextHotel.hotelCity });
+  } catch (error) {
+    $('#settings-error').textContent = error.message;
     $('#settings-error').hidden = false;
     return;
   }

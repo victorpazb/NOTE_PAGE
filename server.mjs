@@ -6,7 +6,7 @@ import path from 'node:path';
 const root = fileURLToPath(new URL('.', import.meta.url));
 const port = Number(process.env.PORT || 5173);
 const mime = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.jpg': 'image/jpeg', '.png': 'image/png', '.ico': 'image/x-icon' };
-const publicFiles = new Set(['/index.html', '/styles.css', '/app.js', '/pricing.js', '/assets/logo-oficial.jpg']);
+const publicFiles = new Set(['/index.html', '/styles.css', '/app.js', '/pricing.js', '/pix.js', '/vendor/qrcodegen.js', '/assets/logo-oficial.jpg']);
 
 createServer(async (req, res) => {
   const pathname = new URL(req.url, 'http://localhost').pathname;

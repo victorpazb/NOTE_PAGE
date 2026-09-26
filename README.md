@@ -27,6 +27,10 @@ Para um documento sem endereço do site e data do navegador nas margens, desmarq
 
 O recibo registra o pagamento integral do total calculado. Os campos do documento são mantidos ao alternar entre orçamento e recibo. **Novo documento** reinicia o formulário, preservando os dados do hotel.
 
+O orçamento inclui um **QR Code Pix** na prévia, na impressão e no PDF, com a chave cadastrada em **Dados do hotel** e o valor final, já considerando o desconto. O código é atualizado quando o total ou os dados do favorecido mudam. Recibos, orçamentos com cálculo inválido e cortesias de valor zero não exibem QR Code de cobrança.
+
+A geração é local, sem chamadas a serviços de QR Code. Aceita CPF/CNPJ com ou sem pontuação, e-mail, chave aleatória e telefone no formato internacional (`+55` e DDD). A validação confere o formato; o cadastro da chave e os dados do destinatário são confirmados pelo aplicativo bancário ao escanear. O QR usa o [padrão Pix do Banco Central](https://www.bcb.gov.br/content/estabilidadefinanceira/pix/Regulamento_Pix/II_ManualdePadroesparaIniciacaodoPix.pdf) e a biblioteca [QR Code generator, de Project Nayuki](https://www.nayuki.io/page/qr-code-generator-library), incluída em `vendor/qrcodegen.js` com licença MIT e uma exportação ES module local.
+
 ## Tarifas e descontos
 
 | Acomodação | Diária por quarto | Capacidade |
@@ -67,4 +71,4 @@ Os testes cobrem tarifas, todas as faixas de desconto, desconto desativado e esp
 
 ## Publicar
 
-Pode ser hospedado como site estático. Publique `index.html`, `styles.css`, `app.js`, `pricing.js` e a pasta `assets/` em um serviço de hospedagem estática. Não há etapa de build.
+Pode ser hospedado como site estático. Publique `index.html`, `styles.css`, `app.js`, `pricing.js`, `pix.js` e as pastas `assets/` e `vendor/` em um serviço de hospedagem estática. Não há etapa de build.
