@@ -1,4 +1,4 @@
-import { currency, currencyWords, dateTimestamp, localToday, addDays, formatDate, calculateStay } from './pricing.js';
+import { currency, currencyWords, dateTimestamp, localToday, addDays, formatDate, formatBrazilianTaxId, brazilianTaxIdType, calculateStay } from './pricing.js';
 import { createPixPayload, pixQrSvg } from './pix.js';
 
 const $ = (selector) => document.querySelector(selector);
@@ -52,6 +52,7 @@ function loadFields(base, saved) {
 }
 let state = loadFields(defaults(), readStorage(DRAFT_KEY));
 state.type = state.type === 'receipt' ? 'receipt' : 'quote';
+state.guestDocument = formatBrazilianTaxId(state.guestDocument);
 if (!PAYMENT_METHODS.includes(state.paymentMethod)) state.paymentMethod = 'Pix';
 let hotel = loadFields(DEFAULT_HOTEL, readStorage(HOTEL_KEY));
 if (!validLogo(hotel.logo)) hotel.logo = DEFAULT_LOGO;
@@ -120,6 +121,7 @@ function renderPix(calc) {
 function renderPreview(calc) {
   const receipt = state.type === 'receipt';
   const guest = state.guestName.trim();
+  const guestDocumentType = brazilianTaxIdType(state.guestDocument);
   const guestCount = Number(state.guests) || 0;
   const label = receipt ? 'Recibo' : 'Orçamento';
   const pix = renderPix(calc);
@@ -130,7 +132,7 @@ function renderPreview(calc) {
   paper.innerHTML = [
     '<header class="doc-header"><img class="doc-logo" src="' + e(hotel.logo) + '" alt="' + e(hotel.hotelName) + '"><div class="doc-title-group"><div class="doc-kicker">' + e(hotel.hotelName) + '</div><h2 class="doc-title">' + label + ' de<br>Hospedagem</h2><div class="doc-phone">' + e(hotel.hotelPhone) + ' &nbsp;·&nbsp; ' + e(hotel.hotelCity) + '</div></div></header>',
     '<div class="doc-meta"><span>Emissão: ' + e(formatDate(state.issueDate)) + '</span><span>' + (state.documentNumber.trim() ? 'Nº ' + e(state.documentNumber) : 'HOSPEDAGEM COM CUIDADO') + '</span></div>',
-    '<div class="doc-client"><div class="doc-label">' + (receipt ? 'Recebemos de' : 'Preparado para') + '</div><strong class="' + (guest ? '' : 'doc-muted') + '">' + e(guest || 'Nome do hóspede ou responsável') + '</strong>' + (state.guestDocument.trim() ? '<p>CPF / CNPJ: ' + e(state.guestDocument) + '</p>' : '') + '</div>',
+    '<div class="doc-client"><div class="doc-label">' + (receipt ? 'Recebemos de' : 'Preparado para') + '</div><strong class="' + (guest ? '' : 'doc-muted') + '">' + e(guest || 'Nome do hóspede ou responsável') + '</strong>' + (state.guestDocument.trim() ? '<p>' + guestDocumentType + ': ' + e(formatBrazilianTaxId(state.guestDocument)) + '</p>' : '') + '</div>',
     receipt ? '<p class="doc-receipt-text">Confirmamos o recebimento de <strong>' + e(currency(calc.total)) + '</strong>, via <strong>' + e(state.paymentMethod) + '</strong>, em <strong>' + e(formatDate(state.paymentDate)) + '</strong>, referente ao pagamento integral da hospedagem descrita neste documento.</p>' : '',
     '<div class="doc-stay"><div><div class="doc-label">Período da hospedagem</div><strong>' + stayDates + '</strong><div class="doc-sub">' + plural(calc.nights, 'diária', 'diárias') + ' · Check-in 14h / Check-out 12h</div></div><div><div class="doc-label">Hóspedes & acomodações</div><strong>' + plural(guestCount, 'pessoa', 'pessoas') + '</strong><div class="doc-sub">' + plural(calc.roomCount, 'quarto selecionado', 'quartos selecionados') + '</div></div></div>',
     '<div class="doc-section-title">Detalhamento da hospedagem</div>',
@@ -169,6 +171,7 @@ function updateValidation(calc) {
 
 function render({ syncNights = true } = {}) {
   const calc = currentCalculation();
+  $('#guest-document-label-text').textContent = brazilianTaxIdType(state.guestDocument) || 'Documento';
   if (syncNights) {
     $('#nights').value = calc.nights || '';
     $('#nights').setCustomValidity('');
@@ -194,7 +197,10 @@ function render({ syncNights = true } = {}) {
 
 function handleFormEdit(event) {
   readForm();
-  if (event.target.id === 'nights') {
+  if (event.target.id === 'guestDocument') {
+    state.guestDocument = formatBrazilianTaxId(event.target.value);
+    event.target.value = state.guestDocument;
+  } else if (event.target.id === 'nights') {
     const nights = Number($('#nights').value);
     const checkout = Number.isInteger(nights) && nights >= 1 ? addDays(state.checkIn, nights) : '';
     $('#nights').setCustomValidity(checkout ? '' : 'Informe uma quantidade inteira de diárias e uma data de entrada válida.');

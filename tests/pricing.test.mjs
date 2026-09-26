@@ -1,9 +1,25 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { addDays, dateTimestamp, formatDate, nightsBetween, calculateStay, currencyWords } from '../pricing.js';
+import { addDays, dateTimestamp, formatDate, formatBrazilianTaxId, brazilianTaxIdType, nightsBetween, calculateStay, currencyWords } from '../pricing.js';
 
 const stay = (days, rooms = { single: 1 }, guests = 1, discountOptions = {}) => calculateStay({
   checkIn: '2026-09-25', checkOut: addDays('2026-09-25', days), rooms, guests, ...discountOptions,
+});
+
+test('formata CPF e CNPJ durante a digitação e limita caracteres excedentes', () => {
+  assert.equal(formatBrazilianTaxId('01401212323'), '014.012.123-23');
+  assert.equal(formatBrazilianTaxId('014.012.123-23'), '014.012.123-23');
+  assert.equal(formatBrazilianTaxId('60996892000154'), '60.996.892/0001-54');
+  assert.equal(formatBrazilianTaxId('014012'), '014.012');
+  assert.equal(formatBrazilianTaxId('abc01401212323xyz'), '014.012.123-23');
+  assert.equal(formatBrazilianTaxId('60996892000154999'), '60.996.892/0001-54');
+});
+
+test('identifica a label do documento pela quantidade de dígitos', () => {
+  assert.equal(brazilianTaxIdType(''), '');
+  assert.equal(brazilianTaxIdType('014.012.123-23'), 'CPF');
+  assert.equal(brazilianTaxIdType('60.996.892/0001-54'), 'CNPJ');
+  assert.equal(brazilianTaxIdType('609968920001'), 'CNPJ');
 });
 
 test('tarifas de uma diária em centavos, sem desconto', () => {

@@ -15,6 +15,22 @@ const HUNDREDS = { 9: 'novecentos', 8: 'oitocentos', 7: 'setecentos', 6: 'seisce
 const brl = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 export const currency = (cents) => brl.format(cents / 100);
 
+export function formatBrazilianTaxId(value) {
+  const digits = String(value ?? '').replace(/\D/g, '').slice(0, 14);
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) return digits.slice(0, 3) + '.' + digits.slice(3);
+  if (digits.length <= 9) return digits.slice(0, 3) + '.' + digits.slice(3, 6) + '.' + digits.slice(6);
+  if (digits.length <= 11) return digits.slice(0, 3) + '.' + digits.slice(3, 6) + '.' + digits.slice(6, 9) + '-' + digits.slice(9);
+  return digits.slice(0, 2) + '.' + digits.slice(2, 5) + '.' + digits.slice(5, 8) + '/' + digits.slice(8, 12)
+    + (digits.length > 12 ? '-' + digits.slice(12) : '');
+}
+
+export function brazilianTaxIdType(value) {
+  const digits = String(value ?? '').replace(/\D/g, '').slice(0, 14);
+  if (!digits) return '';
+  return digits.length <= 11 ? 'CPF' : 'CNPJ';
+}
+
 function groupWords(value) {
   if (value in SMALL) return SMALL[value];
   if (value === 100) return 'cem';

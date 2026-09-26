@@ -53,7 +53,7 @@
             <div class="section-heading"><span class="step-number">01</span><h2>Dados da hospedagem</h2><svg class="icon section-icon"><use href="#i-users"/></svg></div>
             <div class="field"><label for="guestName">Nome do hóspede ou responsável <span class="required-dot" aria-hidden="true">•</span></label><input id="guestName" name="guestName" type="text" placeholder="Como podemos chamar o hóspede?" autocomplete="name" maxlength="100" required /></div>
             <div class="field-row">
-              <div class="field"><label for="guestDocument">CPF / CNPJ <span class="optional">opcional</span></label><input id="guestDocument" name="guestDocument" type="text" placeholder="Documento do responsável" maxlength="24" /></div>
+              <div class="field"><label for="guestDocument"><span id="guest-document-label-text">Documento</span> <span class="optional">opcional</span></label><input id="guestDocument" name="guestDocument" type="text" inputmode="numeric" placeholder="000.000.000-00" maxlength="18" /></div>
               <div class="field"><label for="guests">Número de hóspedes</label><div class="input-with-icon"><svg class="icon"><use href="#i-users"/></svg><input id="guests" name="guests" type="number" min="1" max="999" step="1" required /></div></div>
             </div>
             <div class="field-row stay-dates">
